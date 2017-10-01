@@ -26,12 +26,12 @@ data class Proof(val value: Int) {
 
 private fun String.digest(): String = printHexBinary(getInstance("SHA-256").digest(toByteArray()))
 
+fun Proof.validate(next: Proof) = "${this.value}${next.value}".digest().startsWith("00000")
+
 internal fun proof(lastProof: Proof): Proof {
 
-    fun validate(next: Proof) = "${lastProof.value}${next.value}".digest().startsWith("00000")
-
     var guess = Proof(0)
-    while (!validate(guess)) {
+    while (!lastProof.validate(guess)) {
         guess = guess.next()
     }
     return guess

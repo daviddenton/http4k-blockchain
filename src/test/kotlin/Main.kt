@@ -10,7 +10,8 @@ import org.http4k.server.asServer
 import java.util.*
 
 fun main(args: Array<String>) {
-    val server = BlockchainApp(Wallet(UUID.randomUUID())).asServer(SunHttp(8000)).start()
+    val node1 = BlockchainApp(Wallet(UUID.randomUUID())).asServer(SunHttp(8000)).start()
+    val node2 = BlockchainApp(Wallet(UUID.randomUUID())).asServer(SunHttp(8001)).start()
 
     val client = ApacheClient()
 
@@ -23,5 +24,6 @@ fun main(args: Array<String>) {
     println(transaction())
     println(getChain())
 
-    server.stop()
+    node1.stop()
+    node2.stop()
 }
