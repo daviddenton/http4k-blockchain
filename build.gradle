@@ -2,8 +2,8 @@ group 'org.http4k'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.1.3'
-    ext.http4k_version = '2.18.1'
+    ext.kotlin_version = '1.1.50'
+    ext.http4k_version = '2.29.3'
 
     repositories {
         mavenCentral()
@@ -30,11 +30,13 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
 
     compile "org.http4k:http4k-core:$http4k_version"
+    compile "org.http4k:http4k-client-apache:$http4k_version"
+    compile "org.http4k:http4k-format-jackson:$http4k_version"
     compile "org.http4k:http4k-server-jetty:$http4k_version"
 
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }
 
-mainClassName = 'org.http4k.example.AppKt'
+mainClassName = 'org.http4k.blockchain.LauncherKt'
 
 task stage(dependsOn: ['installDist'])
