@@ -1,1 +1,1 @@
-web: build/install/http4k-heroku-travis-example-app/bin/http4k-heroku-travis-example-app $PORT
+web: build/install/http4k-blockchain/bin/http4k-blockchain $PORT
