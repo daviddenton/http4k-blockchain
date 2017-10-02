@@ -6,7 +6,7 @@ class LocalBlockchainNode(override val address: Uri) : BlockchainNode, Blockchai
 
     private var transactions = listOf<Transaction>()
     private var chain = listOf<Block>()
-    val nodes = mutableSetOf<BlockchainNode>()
+    private val nodes = mutableSetOf<BlockchainNode>()
 
     init {
         newBlock(Proof(100), BlockHash("1"))

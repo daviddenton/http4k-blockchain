@@ -2,17 +2,14 @@ package org.http4k.blockchain
 
 import org.http4k.blockchain.Protocol.block
 import org.http4k.blockchain.Protocol.chain
-import org.http4k.blockchain.Protocol.nodes
-import org.http4k.blockchain.Protocol.register
-import org.http4k.blockchain.Protocol.resolution
-import org.http4k.blockchain.Protocol.transaction
-import org.http4k.blockchain.Protocol.transactionCreated
+import org.http4k.blockchain.Protocol.nodeList
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.CREATED
+import org.http4k.core.Status.Companion.NOT_MODIFIED
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.Uri
 import org.http4k.core.then
@@ -37,39 +34,37 @@ object BlockchainApp {
         return ServerFilters.CatchAll()
             .then(ServerFilters.CatchLensFailure)
             .then(
-
                 routes(
-                    "/transactions" bind routes(
-                        POST to { req: Request ->
-                            Response(OK).with(
-                                transactionCreated of blockchain.newTransaction(transaction.extract(req)))
-                        },
-                        GET to { _: Request ->
-                            Response(OK).with(nodes of blockchain.nodes.map { it.address.toString() })
-                        }),
-                    "/mine" bind GET to {
-                        Response(CREATED).with(block of mineBlock())
-                    },
                     "/chain" bind GET to {
                         Response(OK).with(chain of blockchain.chain())
+                    },
+                    "/mine" bind GET to {
+                        Response(CREATED).with(block of mineBlock())
                     },
                     "/nodes" bind routes(
                         "/resolve" bind GET to
                             {
-                                val replaced = blockchain.resolveConflicts()
-                                val message = if (replaced) "replaced" else "not replaced"
-                                Response(OK).with(resolution of Resolution(message, blockchain.chain()))
+                                val status = if (blockchain.resolveConflicts()) CREATED else NOT_MODIFIED
+                                Response(status).with(chain of blockchain.chain())
                             },
                         "/" bind routes(
                             POST to { req: Request ->
-                                register.extract(req).map(::RemoteBlockchainNode).map(blockchain::registerNode)
-                                Response(CREATED).with(nodes of blockchain.nodes.map { it.address.toString() })
+                                nodeList.extract(req).map(::RemoteBlockchainNode).map(blockchain::registerNode)
+                                Response(CREATED).with(nodeList of blockchain.nodes())
                             },
                             GET to { _: Request ->
-                                Response(OK).with(nodes of blockchain.nodes.map { it.address.toString() })
+                                Response(OK).with(nodeList of blockchain.nodes())
                             }
                         )
-                    )
+                    ),
+                    "/transactions" bind routes(
+                        POST to { req: Request ->
+                            Response(OK).with(
+                                Protocol.transactionCreated of blockchain.newTransaction(Protocol.transaction.extract(req)))
+                        },
+                        GET to { _: Request ->
+                            Response(OK).with(nodeList of blockchain.nodes())
+                        })
                 ))
     }
 }
