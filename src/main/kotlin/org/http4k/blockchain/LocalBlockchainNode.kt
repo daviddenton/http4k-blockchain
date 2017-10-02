@@ -1,15 +1,25 @@
 package org.http4k.blockchain
 
-class LocalBlockchainNode : BlockchainNode {
+import org.http4k.core.Uri
+
+class LocalBlockchainNode(override val address: Uri) : BlockchainNode, BlockchainNetwork {
+
     private var transactions = listOf<Transaction>()
     private var chain = listOf<Block>()
-    val nodes = mutableSetOf<RemoteBlockchainNode>()
+    val nodes = mutableSetOf<BlockchainNode>()
 
     init {
         newBlock(Proof(100), BlockHash("1"))
     }
 
     fun registerNode(node: RemoteBlockchainNode) = nodes.add(node)
+
+    override fun register(vararg addresses: Uri): Iterable<Uri> {
+        addresses.map(::RemoteBlockchainNode).forEach { nodes.add(it) }
+        return nodes.map(BlockchainNode::address)
+    }
+
+    override fun nodes() = nodes.map(BlockchainNode::address)
 
     override fun chain() = chain.toList()
 
@@ -20,9 +30,9 @@ class LocalBlockchainNode : BlockchainNode {
         return newBlock
     }
 
-    fun newTransaction(transaction: Transaction): Int {
-        transactions = transactions.plus(transaction)
-        return lastBlock().index + 1
+    override fun newTransaction(newTransaction: Transaction): TransactionCreated {
+        transactions = transactions.plus(newTransaction)
+        return TransactionCreated(lastBlock().index + 1)
     }
 
     fun lastBlock(): Block = chain.last()
