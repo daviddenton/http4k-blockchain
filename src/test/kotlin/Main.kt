@@ -1,3 +1,6 @@
+import io.github.konfigur8.Configuration
+import io.github.konfigur8.ConfigurationTemplate
+import org.http4k.blockchain.Settings
 import org.http4k.blockchain.Transaction
 import org.http4k.blockchain.Wallet
 import org.http4k.blockchain.node.BlockchainNodeServer
@@ -8,11 +11,10 @@ import org.http4k.core.Uri
 import java.util.*
 
 fun main(args: Array<String>) {
-    val CHAIN_WALLET = Wallet(UUID.fromString("3070562a-4c95-47d0-9994-a3aaaf44b8b8"))
-
-    val registry = NodeRegistryServer(8000).start()
-    val node1 = BlockchainNodeServer(9000, 8000, CHAIN_WALLET).start()
-    val node2 = BlockchainNodeServer(10000, 8000, CHAIN_WALLET).start()
+    val defaults = Settings.defaults
+    val registry = NodeRegistryServer(defaults.reify()).start()
+    val node1 = BlockchainNodeServer(defaults.withPort(9000)).start()
+    val node2 = BlockchainNodeServer(defaults.withPort(10000)).start()
 
     val registryClient = RemoteNodeRegistry(Uri.of("http://localhost:8000"))
     val node1Client = RemoteNode(Uri.of("http://localhost:9000"))
@@ -30,3 +32,6 @@ fun main(args: Array<String>) {
     node2.stop()
     registry.stop()
 }
+
+private fun ConfigurationTemplate.withPort(port: Int): Configuration = this.withProp(Settings.NODE_PORT, port).reify()
+

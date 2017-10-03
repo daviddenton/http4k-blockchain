@@ -10,17 +10,17 @@ import org.http4k.filter.ServerFilters
 
 
 object Stack {
-    private fun Audit(address: Uri) = ResponseFilters.ReportLatency { request, response, duration ->
-        println("':${address.port}' '${request.method}' '${request.uri}' '${response.status}' '${duration.toMillis()}ms'")
+    private fun Audit(port: Int) = ResponseFilters.ReportLatency { request, response, duration ->
+        println("':$port' '${request.method}' '${request.uri}' '${response.status}' '${duration.toMillis()}ms'")
     }
 
-    fun server(address: Uri, app: HttpHandler) =
-        Audit(address)
+    fun server(port: Int, app: HttpHandler) =
+        Audit(port)
             .then(ServerFilters.CatchAll())
             .then(ServerFilters.CatchLensFailure)
             .then(app)
 
     fun client(address: Uri) = SetHostFrom(address)
-        .then(Audit(address))
+        .then(Audit(address.port!!))
         .then(ApacheClient())
 }
