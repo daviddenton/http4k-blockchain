@@ -9,18 +9,21 @@ import org.http4k.core.Response
 import org.http4k.core.Status.Companion.ACCEPTED
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with
+import org.http4k.routing.bind
 import org.http4k.routing.routes
 
 fun NodeRegistryApi(nodeRegistry: NodeRegistry) = routes(
-    GET to { _: Request ->
-        Response(OK).with(nodeList of nodeRegistry.nodes())
-    },
-    POST to { req: Request ->
-        nodeList.extract(req).map { nodeRegistry.register(it) }
-        Response(ACCEPTED).with(nodeList of nodeRegistry.nodes())
-    },
-    DELETE to { req: Request ->
-        nodeList.extract(req).map { nodeRegistry.deregister(it) }
-        Response(ACCEPTED).with(nodeList of nodeRegistry.nodes())
-    }
+    "/nodes" bind routes(
+        GET to { _: Request ->
+            Response(OK).with(nodeList of nodeRegistry.nodes())
+        },
+        POST to { req: Request ->
+            nodeList.extract(req).map { nodeRegistry.register(it) }
+            Response(ACCEPTED).with(nodeList of nodeRegistry.nodes())
+        },
+        DELETE to { req: Request ->
+            nodeList.extract(req).map { nodeRegistry.deregister(it) }
+            Response(ACCEPTED).with(nodeList of nodeRegistry.nodes())
+        }
+    )
 )

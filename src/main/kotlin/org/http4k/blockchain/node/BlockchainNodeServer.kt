@@ -1,5 +1,6 @@
 package org.http4k.blockchain.node
 
+import org.http4k.blockchain.Stack
 import org.http4k.blockchain.Wallet
 import org.http4k.blockchain.registry.RemoteNodeRegistry
 import org.http4k.core.Uri
@@ -14,7 +15,7 @@ object BlockchainNodeServer {
 
         private val blockchain = LocalNode(nodeAddress)
 
-        private val server = BlockchainNodeApi(blockchain, Wallet(UUID.randomUUID())).asServer(Jetty(port))
+        private val server = Stack.server(nodeAddress, BlockchainNodeServerApi(blockchain, Wallet(UUID.randomUUID()))).asServer(Jetty(port))
 
         private val registry = RemoteNodeRegistry(Uri.of("http://localhost:$registryPort"))
 

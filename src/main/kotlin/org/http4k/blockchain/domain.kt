@@ -20,7 +20,7 @@ data class Block(
 
 data class Wallet(val id: UUID)
 
-data class Proof(private val value: Int) {
+data class Proof(val value: Int) {
     fun next(): Proof = Proof(value + 1)
 
     fun validate(next: Proof) = "${this.value}${next.value}".digest().startsWith("00000")
