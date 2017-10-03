@@ -16,7 +16,7 @@ class LocalNode(override val address: Uri,
                 private val nodeWallet: Wallet
 ) : Node, NodeRegistry by LocalNodeRegistry() {
 
-    private var transactions = setOf<Transaction>()
+    private var unconfirmed = setOf<Transaction>()
     private var chain = listOf<Block>()
 
     init {
@@ -40,14 +40,14 @@ class LocalNode(override val address: Uri,
     override fun chain() = chain.toList()
 
     private fun newBlock(proof: Proof, previousHash: BlockHash? = null): Block {
-        val newBlock = Block(chain.size + 1, proof, System.currentTimeMillis(), transactions.toList(), previousHash ?: lastBlock().hash())
-        transactions = mutableSetOf()
+        val newBlock = Block(chain.size + 1, proof, System.currentTimeMillis(), unconfirmed, previousHash ?: lastBlock().hash())
+        unconfirmed = mutableSetOf()
         chain = chain.plus(newBlock)
         return newBlock
     }
 
     override fun newTransaction(newTransaction: Transaction) {
-        transactions = transactions.plus(newTransaction)
+        unconfirmed = unconfirmed.plus(newTransaction)
     }
 
     private fun lastBlock(): Block = chain.last()

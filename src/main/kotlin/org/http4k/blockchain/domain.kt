@@ -12,7 +12,7 @@ data class Block(
     val index: Int,
     val proof: Proof,
     val timestamp: Long,
-    val transactions: List<Transaction>,
+    val transactions: Set<Transaction>,
     val previousHash: BlockHash
 ) {
     fun hash(): BlockHash = BlockHash(toString().digest())
