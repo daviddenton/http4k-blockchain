@@ -22,7 +22,7 @@ object BlockchainNodeServer {
         override fun start(): Http4kServer {
             server.start()
             node.start()
-            return server
+            return this
         }
 
         override fun stop() {
