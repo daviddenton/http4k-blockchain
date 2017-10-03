@@ -23,13 +23,13 @@ data class Wallet(val id: UUID)
 data class Proof(val value: Int) {
     fun next(): Proof = Proof(value + 1)
 
-    fun validate(next: Proof) = "${this.value}${next.value}".digest().startsWith("00000")
+    fun validate(next: Proof) = "${this.value}${next.value}".digest().startsWith("000000")
 }
 
 private fun String.digest(): String = printHexBinary(getInstance("SHA-256").digest(toByteArray()))
 
 internal fun proof(lastProof: Proof): Proof {
-    var guess = Proof(0)
+    var guess = Proof(Random().nextInt())
     while (!lastProof.validate(guess)) {
         guess = guess.next()
     }

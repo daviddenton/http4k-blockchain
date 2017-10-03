@@ -39,15 +39,15 @@ class LocalNode(override val address: Uri,
 
     override fun chain() = chain.toList()
 
+    override fun newTransaction(newTransaction: Transaction) {
+        unconfirmed = unconfirmed.plus(newTransaction)
+    }
+
     private fun newBlock(proof: Proof, previousHash: BlockHash? = null): Block {
         val newBlock = Block(chain.size + 1, proof, System.currentTimeMillis(), unconfirmed, previousHash ?: lastBlock().hash())
         unconfirmed = mutableSetOf()
         chain = chain.plus(newBlock)
         return newBlock
-    }
-
-    override fun newTransaction(newTransaction: Transaction) {
-        unconfirmed = unconfirmed.plus(newTransaction)
     }
 
     private fun lastBlock(): Block = chain.last()
