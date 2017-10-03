@@ -1,25 +1,21 @@
-package org.http4k.blockchain
+package org.http4k.blockchain.node
 
+import org.http4k.blockchain.Block
+import org.http4k.blockchain.BlockHash
+import org.http4k.blockchain.Proof
+import org.http4k.blockchain.Transaction
+import org.http4k.blockchain.registry.LocalNodeRegistry
+import org.http4k.blockchain.registry.NodeRegistry
 import org.http4k.core.Uri
 
-class LocalBlockchainNode(override val address: Uri) : BlockchainNode, BlockchainNetwork {
+class LocalNode(override val address: Uri) : Node, NodeRegistry by LocalNodeRegistry() {
 
     private var transactions = listOf<Transaction>()
     private var chain = listOf<Block>()
-    private val nodes = mutableSetOf<BlockchainNode>()
 
     init {
         newBlock(Proof(100), BlockHash("1"))
     }
-
-    fun registerNode(node: RemoteBlockchainNode) = nodes.add(node)
-
-    override fun register(vararg addresses: Uri): Iterable<Uri> {
-        addresses.map(::RemoteBlockchainNode).forEach { nodes.add(it) }
-        return nodes.map(BlockchainNode::address)
-    }
-
-    override fun nodes() = nodes.map(BlockchainNode::address)
 
     override fun chain() = chain.toList()
 
@@ -30,9 +26,8 @@ class LocalBlockchainNode(override val address: Uri) : BlockchainNode, Blockchai
         return newBlock
     }
 
-    override fun newTransaction(newTransaction: Transaction): TransactionCreated {
+    override fun newTransaction(newTransaction: Transaction) {
         transactions = transactions.plus(newTransaction)
-        return TransactionCreated(lastBlock().index + 1)
     }
 
     fun lastBlock(): Block = chain.last()
@@ -51,7 +46,7 @@ class LocalBlockchainNode(override val address: Uri) : BlockchainNode, Blockchai
     }
 
     fun resolveConflicts(): Boolean {
-        val newChain = nodes.fold(chain) { memo, node ->
+        val newChain = nodes().map(::RemoteNode).fold(chain) { memo, node ->
             val nodeChain = node.chain()
             if (nodeChain.size > memo.size && valid(nodeChain)) nodeChain else memo
         }

@@ -1,18 +1,22 @@
-
-import org.http4k.blockchain.BlockchainNodeServer
-import org.http4k.blockchain.RemoteBlockchainNode
 import org.http4k.blockchain.Transaction
 import org.http4k.blockchain.Wallet
+import org.http4k.blockchain.node.BlockchainNodeServer
+import org.http4k.blockchain.node.RemoteNode
+import org.http4k.blockchain.registry.NodeRegistryServer
+import org.http4k.blockchain.registry.RemoteNodeRegistry
 import org.http4k.core.Uri
 import java.util.*
 
 fun main(args: Array<String>) {
-    val node1 = BlockchainNodeServer(8000).start()
-    val node2 = BlockchainNodeServer(8001).start()
+    val registry = NodeRegistryServer(8000).start()
+    val node1 = BlockchainNodeServer(9000, 8000).start()
+    val node2 = BlockchainNodeServer(10000, 8000).start()
 
-    val node1Client = RemoteBlockchainNode(Uri.of("http://localhost:8000"))
-    val node2Client = RemoteBlockchainNode(Uri.of("http://localhost:8001"))
+    val registryClient = RemoteNodeRegistry(Uri.of("http://localhost:8000"))
+    val node1Client = RemoteNode(Uri.of("http://localhost:9000"))
+    val node2Client = RemoteNode(Uri.of("http://localhost:10000"))
 
+    println(registryClient.nodes())
     println(node1Client.chain())
     println(node1Client.mine())
     println(node1Client.chain())
@@ -22,4 +26,5 @@ fun main(args: Array<String>) {
 
     node1.stop()
     node2.stop()
+    registry.stop()
 }

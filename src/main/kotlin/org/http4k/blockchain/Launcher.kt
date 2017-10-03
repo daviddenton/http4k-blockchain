@@ -1,12 +1,9 @@
 package org.http4k.blockchain
 
-import org.http4k.core.Uri
-import org.http4k.server.Jetty
-import org.http4k.server.asServer
-import java.util.*
+import org.http4k.blockchain.node.BlockchainNodeServer
 
 fun main(args: Array<String>) {
-    val port = if (args.isNotEmpty()) args[0].toInt() else 5000
-
-    BlockchainApp(Uri.of("http://localhost:$port"), Wallet(UUID.randomUUID())).asServer(Jetty(port)).startAndBlock()
+    BlockchainNodeServer(
+        if (args.isNotEmpty()) args[0].toInt() else 5000, 8000
+    ).startAndBlock()
 }
