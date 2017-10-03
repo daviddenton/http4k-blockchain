@@ -4,17 +4,39 @@ import org.http4k.blockchain.Block
 import org.http4k.blockchain.BlockHash
 import org.http4k.blockchain.Proof
 import org.http4k.blockchain.Transaction
+import org.http4k.blockchain.Wallet
+import org.http4k.blockchain.proof
 import org.http4k.blockchain.registry.LocalNodeRegistry
 import org.http4k.blockchain.registry.NodeRegistry
 import org.http4k.core.Uri
+import java.util.*
 
-class LocalNode(override val address: Uri) : Node, NodeRegistry by LocalNodeRegistry() {
+class LocalNode(override val address: Uri,
+                private val registry: NodeRegistry,
+                private val chainWallet: Wallet
+) : Node, NodeRegistry by LocalNodeRegistry() {
+
+    val wallet = Wallet(UUID.randomUUID())
 
     private var transactions = listOf<Transaction>()
     private var chain = listOf<Block>()
 
     init {
         newBlock(Proof(100), BlockHash("1"))
+    }
+
+    fun start() {
+        registry.register(address).forEach { register(it) }
+    }
+
+    fun stop() {
+        registry.deregister(address)
+    }
+
+    fun mineBlock(): Block {
+        val nextProof = proof(lastBlock().proof)
+        newTransaction(Transaction(chainWallet, wallet, 1))
+        return newBlock(nextProof)
     }
 
     override fun chain() = chain.toList()

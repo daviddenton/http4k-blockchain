@@ -7,28 +7,24 @@ import org.http4k.core.Uri
 import org.http4k.server.Http4kServer
 import org.http4k.server.Jetty
 import org.http4k.server.asServer
-import java.util.*
 
 object BlockchainNodeServer {
-    operator fun invoke(port: Int, registryPort: Int) = object : Http4kServer {
-        private val nodeAddress = Uri.of("http://localhost:$port")
+    operator fun invoke(port: Int, registryPort: Int, chainWallet: Wallet) = object : Http4kServer {
 
-        private val blockchain = LocalNode(nodeAddress)
+        val address = Uri.of("http://localhost:$port")
+        private val node = LocalNode(address, RemoteNodeRegistry(Uri.of("http://localhost:$registryPort")), chainWallet)
 
-        private val server = Stack.server(nodeAddress, BlockchainNodeServerApi(blockchain, Wallet(UUID.randomUUID()))).asServer(Jetty(port))
-
-        private val registry = RemoteNodeRegistry(Uri.of("http://localhost:$registryPort"))
+        private val server = Stack.server(address, BlockchainNodeServerApi(node)).asServer(Jetty(port))
 
         override fun start(): Http4kServer {
             server.start()
-            registry.register(nodeAddress).forEach { blockchain.register(it) }
+            node.start()
             return server
         }
 
         override fun stop() {
-            registry.deregister(nodeAddress)
+            node.stop()
             server.stop()
         }
-
     }
 }
