@@ -15,7 +15,8 @@ object BlockchainNodeServer {
         val port = configuration[Settings.NODE_PORT]
         val registryPort = configuration[Settings.REGISTRY_PORT]
         val chainWallet = configuration[Settings.CHAIN_WALLET]
-        private val node = LocalNode(port.toLocalUri(), RemoteNodeRegistry(registryPort.toLocalUri()), chainWallet)
+        val nodeWallet = configuration[Settings.NODE_WALLET]
+        private val node = LocalNode(port.toLocalUri(), RemoteNodeRegistry(registryPort.toLocalUri()), chainWallet, nodeWallet)
 
         private val server = Stack.server(port, BlockchainNodeServerApi(node)).asServer(Jetty(port))
 

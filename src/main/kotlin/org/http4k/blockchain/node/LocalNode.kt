@@ -9,16 +9,14 @@ import org.http4k.blockchain.proof
 import org.http4k.blockchain.registry.LocalNodeRegistry
 import org.http4k.blockchain.registry.NodeRegistry
 import org.http4k.core.Uri
-import java.util.*
 
 class LocalNode(override val address: Uri,
                 private val registry: NodeRegistry,
-                private val chainWallet: Wallet
+                private val chainWallet: Wallet,
+                private val nodeWallet: Wallet
 ) : Node, NodeRegistry by LocalNodeRegistry() {
 
-    val wallet = Wallet(UUID.randomUUID())
-
-    private var transactions = listOf<Transaction>()
+    private var transactions = setOf<Transaction>()
     private var chain = listOf<Block>()
 
     init {
@@ -35,15 +33,15 @@ class LocalNode(override val address: Uri,
 
     fun mineBlock(): Block {
         val nextProof = proof(lastBlock().proof)
-        newTransaction(Transaction(chainWallet, wallet, 1))
+        newTransaction(Transaction(chainWallet, nodeWallet, 1))
         return newBlock(nextProof)
     }
 
     override fun chain() = chain.toList()
 
-    fun newBlock(proof: Proof, previousHash: BlockHash? = null): Block {
-        val newBlock = Block(chain.size + 1, proof, System.currentTimeMillis(), transactions, previousHash ?: lastBlock().hash())
-        transactions = mutableListOf()
+    private fun newBlock(proof: Proof, previousHash: BlockHash? = null): Block {
+        val newBlock = Block(chain.size + 1, proof, System.currentTimeMillis(), transactions.toList(), previousHash ?: lastBlock().hash())
+        transactions = mutableSetOf()
         chain = chain.plus(newBlock)
         return newBlock
     }
@@ -52,7 +50,7 @@ class LocalNode(override val address: Uri,
         transactions = transactions.plus(newTransaction)
     }
 
-    fun lastBlock(): Block = chain.last()
+    private fun lastBlock(): Block = chain.last()
 
     private fun valid(newChain: List<Block>): Boolean {
         var lastBlock = newChain.first()

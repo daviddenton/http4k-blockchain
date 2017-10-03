@@ -11,10 +11,9 @@ import org.http4k.core.Uri
 import java.util.*
 
 fun main(args: Array<String>) {
-    val defaults = Settings.defaults
-    val registry = NodeRegistryServer(defaults.reify()).start()
-    val node1 = BlockchainNodeServer(defaults.withPort(9000)).start()
-    val node2 = BlockchainNodeServer(defaults.withPort(10000)).start()
+    val registry = NodeRegistryServer(Settings.defaults.reify()).start()
+    val node1 = BlockchainNodeServer(Settings.defaults.withPort(9000)).start()
+    val node2 = BlockchainNodeServer(Settings.defaults.withPort(10000)).start()
 
     val registryClient = RemoteNodeRegistry(Uri.of("http://localhost:8000"))
     val node1Client = RemoteNode(Uri.of("http://localhost:9000"))
