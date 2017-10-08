@@ -60,7 +60,7 @@ class LocalNode(override val address: Uri,
         }
 
         return if (newChain != blockchain.chain) {
-            blockchain = Blockchain(chain = newChain)
+            blockchain = Blockchain(newChain)
             true
         } else false
     }

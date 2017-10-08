@@ -7,8 +7,8 @@ import org.http4k.blockchain.Transaction
 import org.http4k.blockchain.Wallet
 import java.util.*
 
-data class Blockchain(val unconfirmed: Set<Transaction> = emptySet(),
-                      val chain: List<Block> = emptyList()) {
+data class Blockchain(val chain: List<Block> = emptyList(),
+                      val unconfirmed: Set<Transaction> = emptySet()) {
     operator fun plus(new: Transaction): Blockchain = copy(unconfirmed = unconfirmed + new)
 
     fun balanceOf(wallet: Wallet): Int = chain.flatMap { it.transactions }
