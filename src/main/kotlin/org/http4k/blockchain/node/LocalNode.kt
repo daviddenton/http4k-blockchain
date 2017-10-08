@@ -30,7 +30,7 @@ class LocalNode(override val address: Uri,
         return blockchain.last()
     }
 
-    override fun chain() = blockchain.chain.toList()
+    override fun chain() = blockchain.chain
 
     override fun transactions() = blockchain.unconfirmed
 
@@ -40,28 +40,31 @@ class LocalNode(override val address: Uri,
             Accepted
         } else Rejected
 
-    private fun valid(newChain: List<Block>): Boolean {
-        var lastBlock = newChain.first()
-        var index = 1
-        val block = blockchain.chain[1]
-        while (index < blockchain.size()) {
-            if (block.previousHash != lastBlock.hash()) return false
-            if (!blockchain.last().proof.validate(block.proof)) return false
-            lastBlock = blockchain.last()
-            index += 1
-        }
-        return true
-    }
-
     fun resolveConflicts(): Boolean {
-        val newChain = nodes().map(::RemoteNode).fold(chain()) { memo, node ->
-            val nodeChain = node.chain()
-            if (nodeChain.size > memo.size && valid(nodeChain)) nodeChain else memo
-        }
+        val newChain = nodes().map(::RemoteNode)
+            .fold(chain()) { memo, node ->
+                node.chain().run {
+                    if (size > memo.size && blockchain.validate(this)) this else memo
+                }
+            }
 
         return if (newChain != blockchain.chain) {
             blockchain = Blockchain(newChain)
             true
         } else false
     }
+
+    private fun Blockchain.validate(newChain: List<Block>): Boolean {
+        var lastBlock = newChain.first()
+        var index = 1
+        val block = chain[1]
+        while (index < size()) {
+            if (block.previousHash != lastBlock.hash()) return false
+            if (!last().proof.validate(block.proof)) return false
+            lastBlock = last()
+            index += 1
+        }
+        return true
+    }
+
 }
