@@ -7,7 +7,7 @@ import javax.xml.bind.DatatypeConverter.printHexBinary
 data class BlockHash(val value: String)
 
 enum class TransactionState {
-    Accepted, Rejected;
+    Accepted, Rejected
 }
 
 data class Transaction(val sender: Wallet, val recipient: Wallet, val amount: Int)
