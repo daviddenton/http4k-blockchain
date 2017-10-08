@@ -22,11 +22,7 @@ data class Block(
     fun hash(): BlockHash = BlockHash(toString().digest())
 }
 
-data class Wallet(val id: UUID) {
-    companion object {
-        val SEED_WALLET = Wallet(UUID.fromString("00000000-0000-0000-0000-000000000000"))
-    }
-}
+data class Wallet(val id: UUID)
 
 data class Proof(val value: Int) {
     fun next(): Proof = Proof(value + 1)
