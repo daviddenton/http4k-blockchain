@@ -7,7 +7,6 @@ import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
 import org.http4k.core.Request
 import org.http4k.core.Response
-import org.http4k.core.Status
 import org.http4k.core.Status.Companion.ACCEPTED
 import org.http4k.core.Status.Companion.CONFLICT
 import org.http4k.core.Status.Companion.CREATED
@@ -20,7 +19,7 @@ import org.http4k.routing.routes
 
 fun NodeApi(node: LocalNode): RoutingHttpHandler = routes(
     "/chain" bind GET to {
-        Response(Status.OK).with(Protocol.chain of node.chain())
+        Response(OK).with(Protocol.chain of node.chain())
     },
     "/mine" bind GET to {
         Response(CREATED).with(Protocol.block of node.mineBlock())
