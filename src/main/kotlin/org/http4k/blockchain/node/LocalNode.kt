@@ -7,33 +7,26 @@ import org.http4k.blockchain.Transaction
 import org.http4k.blockchain.TransactionState
 import org.http4k.blockchain.TransactionState.Rejected
 import org.http4k.blockchain.Wallet
-import org.http4k.blockchain.Wallet.Companion.SEED_WALLET
 import org.http4k.blockchain.proof
 import org.http4k.blockchain.registry.LocalNodeRegistry
 import org.http4k.blockchain.registry.NodeRegistry
 import org.http4k.core.Uri
-
 
 class LocalNode(override val address: Uri,
                 private val registry: NodeRegistry,
                 private val chainWallet: Wallet,
                 private val nodeWallet: Wallet
 ) : Node, NodeRegistry by LocalNodeRegistry() {
-    private var unconfirmed = setOf<Transaction>()
-    private var chain = listOf<Block>()
+
+    private var blockchain = Blockchain.newChain(chainWallet)
 
     init {
-        unconfirmed += Transaction(SEED_WALLET, chainWallet, 10)
         newBlock(Proof(100), BlockHash("1"))
     }
 
-    fun start() {
-        registry.register(address).forEach { register(it) }
-    }
+    fun start() = registry.register(address).forEach { register(it) }
 
-    fun stop() {
-        registry.deregister(address)
-    }
+    fun stop() = apply { registry.deregister(address) }
 
     fun mineBlock(): Block {
         val nextProof = proof(lastBlock().proof)
@@ -41,35 +34,34 @@ class LocalNode(override val address: Uri,
         return newBlock(nextProof)
     }
 
-    override fun chain() = chain.toList()
+    override fun chain() = blockchain.chain.toList()
 
-    override fun transactions() = unconfirmed
+    override fun transactions() = blockchain.unconfirmed
 
     override fun newTransaction(newTransaction: Transaction): TransactionState =
         if (balanceOf(newTransaction.sender) > newTransaction.amount) {
-            unconfirmed += newTransaction
-            println(unconfirmed)
+            blockchain += newTransaction
             TransactionState.Accepted
         } else Rejected
 
-    private fun balanceOf(wallet: Wallet): Int = chain.flatMap { it.transactions }
-        .plus(unconfirmed)
+    private fun balanceOf(wallet: Wallet): Int = blockchain.chain.flatMap { it.transactions }
+        .plus(blockchain.unconfirmed)
         .balanceFor(wallet)
 
     private fun newBlock(proof: Proof, previousHash: BlockHash? = null): Block {
-        val newBlock = Block(chain.size + 1, proof, System.currentTimeMillis(), unconfirmed, previousHash ?: lastBlock().hash())
-        unconfirmed = mutableSetOf()
-        chain = chain.plus(newBlock)
+        val newBlock = Block(blockchain.chain.size + 1, proof, System.currentTimeMillis(), blockchain.unconfirmed, previousHash ?: lastBlock().hash())
+        blockchain = Blockchain(chain = blockchain.chain)
+        blockchain += newBlock
         return newBlock
     }
 
-    private fun lastBlock(): Block = chain.last()
+    private fun lastBlock(): Block = blockchain.chain.last()
 
     private fun valid(newChain: List<Block>): Boolean {
         var lastBlock = newChain.first()
         var index = 1
-        val block = chain[1]
-        while (index < chain.size) {
+        val block = blockchain.chain[1]
+        while (index < blockchain.chain.size) {
             if (block.previousHash != lastBlock.hash()) return false
             if (!lastBlock().proof.validate(block.proof)) return false
             lastBlock = lastBlock()
@@ -79,13 +71,13 @@ class LocalNode(override val address: Uri,
     }
 
     fun resolveConflicts(): Boolean {
-        val newChain = nodes().map(::RemoteNode).fold(chain) { memo, node ->
+        val newChain = nodes().map(::RemoteNode).fold(blockchain.chain) { memo, node ->
             val nodeChain = node.chain()
             if (nodeChain.size > memo.size && valid(nodeChain)) nodeChain else memo
         }
 
-        return if (newChain != chain) {
-            chain = newChain
+        return if (newChain != blockchain.chain) {
+            blockchain = Blockchain(chain = newChain)
             true
         } else false
     }
