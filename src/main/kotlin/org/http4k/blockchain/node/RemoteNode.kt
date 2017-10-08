@@ -6,6 +6,8 @@ import org.http4k.blockchain.Protocol.chain
 import org.http4k.blockchain.Stack
 import org.http4k.blockchain.Transaction
 import org.http4k.blockchain.TransactionState
+import org.http4k.blockchain.TransactionState.Accepted
+import org.http4k.blockchain.TransactionState.Rejected
 import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
 import org.http4k.core.Request
@@ -26,9 +28,9 @@ class RemoteNode(override val address: Uri) : Node {
         when (
         client(Request(POST, "/transactions")
             .with(Protocol.transaction of newTransaction)).status) {
-            ACCEPTED -> TransactionState.Accepted
-            CONFLICT -> TransactionState.Rejected
-            else -> TransactionState.Rejected
+            ACCEPTED -> Accepted
+            CONFLICT -> Rejected
+            else -> Rejected
         }
 
     override fun transactions(): Set<Transaction>

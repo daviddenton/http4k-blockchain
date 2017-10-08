@@ -7,6 +7,7 @@ import org.http4k.blockchain.Transaction
 import org.http4k.blockchain.TransactionState
 import org.http4k.blockchain.TransactionState.Rejected
 import org.http4k.blockchain.Wallet
+import org.http4k.blockchain.Wallet.Companion.SEED_WALLET
 import org.http4k.blockchain.proof
 import org.http4k.blockchain.registry.LocalNodeRegistry
 import org.http4k.blockchain.registry.NodeRegistry
@@ -22,6 +23,7 @@ class LocalNode(override val address: Uri,
     private var chain = listOf<Block>()
 
     init {
+        unconfirmed += Transaction(SEED_WALLET, chainWallet, 10)
         newBlock(Proof(100), BlockHash("1"))
     }
 
@@ -46,6 +48,7 @@ class LocalNode(override val address: Uri,
     override fun newTransaction(newTransaction: Transaction): TransactionState =
         if (balanceOf(newTransaction.sender) > newTransaction.amount) {
             unconfirmed += newTransaction
+            println(unconfirmed)
             TransactionState.Accepted
         } else Rejected
 
