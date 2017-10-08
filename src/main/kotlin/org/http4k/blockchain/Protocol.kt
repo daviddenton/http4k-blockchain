@@ -9,5 +9,6 @@ object Protocol {
     val block = Body.auto<Block>().toLens()
     val nodeList = Body.auto<List<String>>().map({ it.map(Uri.Companion::of) }, { it.map(Uri::toString) }).toLens()
     val transaction = Body.auto<Transaction>().toLens()
+    val transactions = Body.auto<Set<Transaction>>().toLens()
 
 }

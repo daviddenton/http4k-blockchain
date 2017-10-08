@@ -12,13 +12,13 @@ import org.http4k.core.with
 class RemoteNodeRegistry(address: Uri) : NodeRegistry {
     private val client = Stack.client(address)
 
-    override fun register(vararg addresses: Uri) = nodeList.extract(client(Request(POST, "/nodes")
+    override fun register(vararg addresses: Uri) = nodeList(client(Request(POST, "/nodes")
         .with(nodeList of addresses.toList())
     ))
 
-    override fun deregister(vararg addresses: Uri): List<Uri> = nodeList.extract(client(Request(DELETE, "/nodes")
+    override fun deregister(vararg addresses: Uri): List<Uri> = nodeList(client(Request(DELETE, "/nodes")
         .with(nodeList of addresses.toList())
     ))
 
-    override fun nodes() = nodeList.extract(client(Request(GET, "/nodes")))
+    override fun nodes() = nodeList(client(Request(GET, "/nodes")))
 }

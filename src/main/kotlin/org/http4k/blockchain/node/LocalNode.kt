@@ -4,18 +4,20 @@ import org.http4k.blockchain.Block
 import org.http4k.blockchain.BlockHash
 import org.http4k.blockchain.Proof
 import org.http4k.blockchain.Transaction
+import org.http4k.blockchain.TransactionState
+import org.http4k.blockchain.TransactionState.Rejected
 import org.http4k.blockchain.Wallet
 import org.http4k.blockchain.proof
 import org.http4k.blockchain.registry.LocalNodeRegistry
 import org.http4k.blockchain.registry.NodeRegistry
 import org.http4k.core.Uri
 
+
 class LocalNode(override val address: Uri,
                 private val registry: NodeRegistry,
                 private val chainWallet: Wallet,
                 private val nodeWallet: Wallet
 ) : Node, NodeRegistry by LocalNodeRegistry() {
-
     private var unconfirmed = setOf<Transaction>()
     private var chain = listOf<Block>()
 
@@ -39,9 +41,17 @@ class LocalNode(override val address: Uri,
 
     override fun chain() = chain.toList()
 
-    override fun newTransaction(newTransaction: Transaction) {
-        unconfirmed = unconfirmed.plus(newTransaction)
-    }
+    override fun transactions() = unconfirmed
+
+    override fun newTransaction(newTransaction: Transaction): TransactionState =
+        if (balanceOf(newTransaction.sender) > newTransaction.amount) {
+            unconfirmed += newTransaction
+            TransactionState.Accepted
+        } else Rejected
+
+    private fun balanceOf(wallet: Wallet): Int = chain.flatMap { it.transactions }
+        .plus(unconfirmed)
+        .balanceFor(wallet)
 
     private fun newBlock(proof: Proof, previousHash: BlockHash? = null): Block {
         val newBlock = Block(chain.size + 1, proof, System.currentTimeMillis(), unconfirmed, previousHash ?: lastBlock().hash())
@@ -77,3 +87,12 @@ class LocalNode(override val address: Uri,
         } else false
     }
 }
+
+internal fun Iterable<Transaction>.balanceFor(wallet: Wallet): Int =
+    fold(0) { acc: Int, (sender, recipient, amount) ->
+        when (wallet) {
+            sender -> acc - amount
+            recipient -> acc + amount
+            else -> acc
+        }
+    }

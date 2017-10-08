@@ -20,12 +20,13 @@ fun main(args: Array<String>) {
     val node2Client = RemoteNode(Uri.of("http://localhost:10000"))
 
     println(registryClient.nodes())
-    println(node1Client.chain())
-    println(node1Client.mine())
-    println(node1Client.chain())
+//    println(node1Client.chain())
+//    println(node1Client.mine())
+//    println(node1Client.chain())
     println(node2Client.newTransaction(Transaction(Wallet(UUID.randomUUID()), Wallet(UUID.randomUUID()), 432)))
-    println(node1Client.mine())
-    println(node2Client.chain())
+    println(node2Client.transactions())
+//    println(node1Client.mine())
+//    println(node2Client.chain())
 
     node1.stop()
     node2.stop()

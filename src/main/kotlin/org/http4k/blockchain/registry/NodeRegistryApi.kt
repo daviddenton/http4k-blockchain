@@ -18,11 +18,11 @@ fun NodeRegistryApi(nodeRegistry: NodeRegistry) = routes(
             Response(OK).with(nodeList of nodeRegistry.nodes())
         },
         POST to { req: Request ->
-            nodeList.extract(req).map { nodeRegistry.register(it) }
+            nodeList(req).map { nodeRegistry.register(it) }
             Response(ACCEPTED).with(nodeList of nodeRegistry.nodes())
         },
         DELETE to { req: Request ->
-            nodeList.extract(req).map { nodeRegistry.deregister(it) }
+            nodeList(req).map { nodeRegistry.deregister(it) }
             Response(ACCEPTED).with(nodeList of nodeRegistry.nodes())
         }
     )
