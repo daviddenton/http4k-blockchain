@@ -29,7 +29,7 @@ class LocalNode(override val address: Uri,
     fun stop() = apply { registry.deregister(address) }
 
     fun mineBlock(): Block {
-        val nextProof = proof(lastBlock().proof)
+        val nextProof = proof(blockchain.last().proof)
         newTransaction(Transaction(chainWallet, nodeWallet, 1))
         return newBlock(nextProof)
     }
@@ -39,23 +39,17 @@ class LocalNode(override val address: Uri,
     override fun transactions() = blockchain.unconfirmed
 
     override fun newTransaction(newTransaction: Transaction): TransactionState =
-        if (balanceOf(newTransaction.sender) > newTransaction.amount) {
+        if (blockchain.balanceOf(newTransaction.sender) > newTransaction.amount) {
             blockchain += newTransaction
             TransactionState.Accepted
         } else Rejected
 
-    private fun balanceOf(wallet: Wallet): Int = blockchain.chain.flatMap { it.transactions }
-        .plus(blockchain.unconfirmed)
-        .balanceFor(wallet)
-
     private fun newBlock(proof: Proof, previousHash: BlockHash? = null): Block {
-        val newBlock = Block(blockchain.chain.size + 1, proof, System.currentTimeMillis(), blockchain.unconfirmed, previousHash ?: lastBlock().hash())
+        val newBlock = Block(blockchain.chain.size + 1, proof, System.currentTimeMillis(), blockchain.unconfirmed, previousHash ?: blockchain.last().hash())
         blockchain = Blockchain(chain = blockchain.chain)
         blockchain += newBlock
         return newBlock
     }
-
-    private fun lastBlock(): Block = blockchain.chain.last()
 
     private fun valid(newChain: List<Block>): Boolean {
         var lastBlock = newChain.first()
@@ -63,8 +57,8 @@ class LocalNode(override val address: Uri,
         val block = blockchain.chain[1]
         while (index < blockchain.chain.size) {
             if (block.previousHash != lastBlock.hash()) return false
-            if (!lastBlock().proof.validate(block.proof)) return false
-            lastBlock = lastBlock()
+            if (!blockchain.last().proof.validate(block.proof)) return false
+            lastBlock = blockchain.last()
             index += 1
         }
         return true
